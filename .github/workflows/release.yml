@@ -20,5 +20,5 @@ jobs:
         repo_token: "${{ secrets.GITHUB_TOKEN }}"
         automatic_release_tag: "${{ github.ref_name }}"
         prerelease: false
-        title: "Automatic releaseon ${{ github.ref_name }}"
+        title: "Automatic release on ${{ github.ref_name }}"
         files: manifest.json
