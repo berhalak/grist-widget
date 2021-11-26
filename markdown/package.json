@@ -8,6 +8,6 @@
     "url": "https://gristlabs.github.io/grist-widget/markdown",
     "widgetId": "@gristlabs/widget-markdown",
     "published": true,
-    "desiredAccessLevel": "full"
+    "accessLevel": "full"
   }
 }
