@@ -1,0 +1,116 @@
+<html lang="en">
+
+<head style="height: 100%; margin: 0px; padding: 0px">
+  <meta charset="utf-8">
+  <title>Monaco editor no loader</title>
+  <script src="http://localhost:8080/grist-plugin-api.js"></script>
+
+  <link rel="stylesheet" data-name="vs/editor/editor.main" href="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.26.1/min/vs/editor/editor.main.min.css">
+</head>
+
+<body style="height: 100%; display: flex; flex-direction: column; margin: 0px;">
+  <div>
+    <select>
+      <option>Select example</option>
+      <option>Read table</option>
+    </select>
+    <button style="margin-left: auto;">Execute (F9)</button>
+  </div>
+  <div id="parentContainer" style="flex-grow:1; overflow: hidden; border-top:1px solid #a0a0a0;  border-bottom:1px solid #a0a0a0;">
+
+    <div id="container" style="border-top:0px; "></div>
+
+  </div>
+  <pre id="log" style="flex-basis: 150px; font-size: 11px; overflow-y: auto;">
+  </pre>
+  <script>
+    var require = {paths: {'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.26.1/min/vs'}};
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.26.1/min/vs/loader.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.26.1/min/vs/editor/editor.main.nls.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.26.1/min/vs/editor/editor.main.js"></script>
+  <script type="module">
+    import {definition} from "./definition.js"
+    const value = sessionStorage.getItem("__editor") || '';
+    window.editor = monaco.editor.create(document.getElementById('container'), {
+      value,
+      language: 'javascript',
+      fontSize: "12px",
+      automaticLayout: false,
+      minimap: {
+        enabled: false
+      }
+    });
+    // window.onresize = function() {
+    //   window.editor.layout();
+    // };
+    const model = editor.getModel();
+    model.updateOptions({tabSize: 2});
+    monaco.languages.typescript.javascriptDefaults.addExtraLib(definition, 'plugin.d.ts');
+    monaco.languages.typescript.javascriptDefaults.addExtraLib(`
+    import * as Grist from "grist"
+    declare global {
+      interface Window {
+        var grist: typeof Grist;
+      }
+    }
+    export {}
+    `, 'main.d.ts');
+
+
+    const oldLog = console.log;
+    console.log = (...args) => {
+      if (args.length == 1)
+        document.getElementById('log').innerHTML = JSON.stringify(args[0], null, 2);
+      oldLog.call(console, ...args);
+    }
+
+    window.addEventListener('resize', () => {
+      const parent = document.getElementById("parentContainer");
+      // get the parent dimensions and re-layout the editor
+      const rect = parent.getBoundingClientRect();
+      debugger
+      editor.layout({width: rect.width, height: rect.height})
+    })
+    const parent = document.getElementById("parentContainer");
+    // get the parent dimensions and re-layout the editor
+    const rect = parent.getBoundingClientRect();
+    editor.layout({width: rect.width, height: rect.height})
+    editor.addAction({
+      // An unique identifier of the contributed action.
+      id: 'my-unique-id',
+
+      // A label of the action that will be presented to the user.
+      label: 'Run',
+
+      // An optional array of keybindings for the action.
+      keybindings: [
+        monaco.KeyCode.F9,
+      ],
+
+      // A precondition for this action.
+      precondition: null,
+
+      // A rule to evaluate on top of the precondition in order to dispatch the keybindings.
+      keybindingContext: null,
+
+      contextMenuGroupId: 'navigation',
+
+      contextMenuOrder: 1.5,
+
+      // Method that will be executed when the action is triggered.
+      // @param editor The editor instance is passed in as a convenience
+      run: function(ed) {
+        grist.rpc.removeAllListeners();
+        sessionStorage.setItem('__editor', ed.getValue());
+        eval(`async function __main() {
+${ed.getValue()}
+}
+__main().catch(console.error)`);
+      }
+    });
+
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,165 @@
+<html lang="en">
+
+<head style="height: 100%; margin: 0px; padding: 0px">
+  <meta charset="utf-8">
+  <title>Monaco editor no loader</title>
+  <script src="http://localhost:8080/grist-plugin-api.js"></script>
+  <link rel="stylesheet" data-name="vs/editor/editor.main" href="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.26.1/min/vs/editor/editor.main.min.css">
+</head>
+
+<body style="height: 100%; display: flex; flex-direction: column; margin: 0px;">
+  <div style="padding: 4px; display: flex; justify-content: space-between; margin-bottom: 4px; border-bottom:1px solid #a0a0a0;">
+    <select style="padding: 4px 8px" id="examples">
+     
+    </select>
+    <button style="cursor: pointer; padding: 8px 16px; margin-left: auto; border: 0px; background: #16b378; border-radius: 4px; color: white" onclick="execute();">Execute (F9)</button>
+  </div>
+
+  <div id="parentContainer" style="flex-grow:1; overflow: hidden;">
+
+    <div id="container" style="border-top:0px; "></div>
+
+  </div>
+  <div style="font-size: 12px; border-bottom: 1px solid gray; font-weight: 500; font-family: Arial, Helvetica, sans-serif; background: lightgray; padding: 8px">
+    <span>Output <span style="font-style: italic;">use global <b>show()</b> function to display here any value</span>
+    </span>
+  </div>
+  <pre id="__log" style="flex-basis: 40%; font-size: 11px; overflow-y: auto; padding: 4px; margin: 0px;">
+  </pre>
+  <script>
+    var require = {paths: {'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.26.1/min/vs'}};
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.26.1/min/vs/loader.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.26.1/min/vs/editor/editor.main.nls.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.26.1/min/vs/editor/editor.main.js"></script>
+  <script src="definition.js"></script>
+  <script src="examples.js"></script>
+  <script type="module">
+    // Helper to create memory object.
+    function memory(name) {
+      const key = `___${name}`;
+      return function(arg) {
+        if (arg === undefined) {
+          const value = sessionStorage.getItem(key) ?? null;
+          return JSON.parse(value);
+        } else {
+          sessionStorage.setItem(key, JSON.stringify(arg));
+        }
+      }
+    }
+    const code = memory('code');
+    const jsValue = code() || '';
+    const jsModel = monaco.editor.createModel(
+      jsValue,
+      'javascript'
+    );
+    jsModel.onDidChangeContent(() => {
+      code(jsModel.getValue());
+    });
+    window.editor = monaco.editor.create(document.getElementById('container'), {
+      model: jsModel,
+      fontSize: "12px",
+      automaticLayout: false,
+      wordWrap: "on",
+      minimap: {
+        enabled: false
+      }
+    });
+    window.editor.getModel().updateOptions({tabSize: 2});
+    monaco.languages.typescript.javascriptDefaults.addExtraLib(definition, 'plugin.d.ts');
+    monaco.languages.typescript.javascriptDefaults.addExtraLib(`
+    import * as Grist from "grist"
+    declare global {
+      interface Window {
+        var grist: typeof Grist;
+        function show(data: any): void;
+        function append(data: any): void;
+      }
+    }
+    export {}
+    `, 'main.d.ts');
+    function serialize(arg) {
+      if (!arg) return '';
+      const line = typeof arg == 'string' ? arg :
+        arg instanceof Error ? arg.message : JSON.stringify(arg, null, 2);
+      return line.trim();
+    }
+    window.show = (arg) => {
+      document.getElementById('__log').innerText = serialize(arg);
+    }
+    window.append = (arg) => {
+      const el = document.getElementById('__log');
+      const previous = el.innerText;
+      show(previous + '\n' + serialize(arg));
+      el.scrollBy(0, 99999);
+    }
+    function resize() {
+      const parent = document.getElementById("parentContainer");
+      const rect = parent.getBoundingClientRect();
+      editor.layout({width: rect.width, height: rect.height})
+    }
+    window.addEventListener('resize', resize);
+    resize();
+    async function execute() {
+      try {
+        document.getElementById('__log').innerText = '';
+        document.getElementById('__log').style.background = 'white';
+        const code = jsModel.getValue();
+        grist.rpc.removeAllListeners();
+        sessionStorage.setItem('__editor', code);
+        // Create illusion of top level await.
+        eval(
+`async function __main() {
+${code}
+}
+window.__execution = __main()`);
+        await window.__execution;
+      } catch (err) {
+        document.getElementById('__log').style.background = 'red';
+        show(err);
+      }
+    }
+    window.execute = execute;
+    editor.addAction({
+      id: 'execute',
+      label: 'Run',
+      keybindings: [
+        monaco.KeyCode.F9,
+      ],
+      contextMenuGroupId: 'navigation',
+      contextMenuOrder: 1,
+      run: execute
+    });
+
+    const select = document.getElementById("examples");
+
+    select.addEventListener('change', function() {
+      jsModel.setValue(this.value?.trim());
+    })
+
+    function convert(e) {
+      const option = document.createElement("option");
+      option.innerText = e.title;
+      option.value = e.code;
+      return option;
+    }
+
+    const topLevel = select.append(...examples.filter(e => !e.group).map(convert));
+
+    const groups = select.append(...[...new Set(examples.map(e => e.group?.trim()).filter(g => g))]
+      .map(g => examples.filter(e => e.group == g))
+      .map(g => {
+        const group = document.createElement("optgroup");
+        group.label = g[0].group;
+        group.append(...g.map(convert));
+        return group;
+      }));
+
+    if (!code() && examples[0]) {
+      jsModel.setValue(examples[0].code);
+    }
+
+  </script>
+</body>
+
+</html>
