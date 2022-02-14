@@ -50,20 +50,8 @@ grist.onOptions((options, iteraction) => {
   },
   {
     code: `
-// To read data from the underlying table
-grist.ready({
-  requiredAccess: 'read table'
-});
-
-// And then subscribe to onRecords event to receive all the records
-grist.onRecords((data) => {
-  show(data);
-});
-
-// Press F9 (or Exeucte) to run this code, and then
-// update, add, or delete some records in the table.
-
-// To read active record from the table.
+// To read active record from the table. First request
+// 'read table' access level.
 grist.ready({
   requiredAccess: 'read table'
 });
@@ -107,7 +95,7 @@ grist.onRecord((record, mapping) => {
 
   {
     code: `
-// How to map records.
+// First request 'read table' access level.
 grist.ready({
   requiredAccess: 'read table'
 });
