@@ -111,7 +111,7 @@ grist.ready({
 });
 
 // Here is how you can fetch record by id.
-show(await grist.docApi.fetchSelectedRecord(4));
+show(await grist.docApi.fetchSelectedRecord(2));
 
 // Here is how you can fetch all records in the table
 // Uncomment line below, to see what will happen.
@@ -121,7 +121,7 @@ show(await grist.docApi.fetchSelectedRecord(4));
 // Uncomment line below, to see what will happen.
 // show(await grist.docApi.fetchTable('Table1'));
 `,
-    title: 'Mapping columns',
+    title: 'Fetching data',
     group: "Grist API"
   },
 ];
