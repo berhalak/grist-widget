@@ -1,23 +1,25 @@
 const examples = [
   {
     code: `
-// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-// CAUTION: DO NOT PASTE HERE ANY CODE YOU DON'T TRUST.
-// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+// CAUTION: DO NOT PASTE HERE CODE YOU DON'T TRUST.
+// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 // Welcome in the Grist API Explorer. It is a place where you
-// can explore out API. On the upper left you have some examples
-// you can follow to learn more about the API.
+// can explore our API. On the upper left corner you have some
+// examples to follow and learn about Grist API.
 
 // To start press F9 (or the green button on the right) to execute
 // following line of code.
 show("Hello world");
 
-// You can use this method to inspect data that come from Grist.
+// You can use this global method to inspect data that come from
+// Grist, of course console.log also works as expected.
 
-// All code is run inside your browser.
+// All code is run inside your browser, but all the API calls are
+// real and can ready or sometimes modify your data.
 
-// Feel free to experiment and change this code.`.trim(),
+// Feel free to experiment and change this code however you like.`.trim(),
     title: 'Hello world',
   },
   {
