@@ -116,7 +116,9 @@
       content.document.open();
       content.document.write(html);
       if (code.trim()) {
-        content.document.write(`<script src="http://localhost:8080/grist-plugin-api.js"></` + `script>`);
+        if (!html.includes("grist-plugin-api.js")) {
+          content.document.write(`<script src="http://localhost:8080/grist-plugin-api.js"></` + `script>`);
+        }
         content.document.write(`<script>${code}</` + `script>`);
       }
       content.document.close();
