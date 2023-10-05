@@ -11,6 +11,14 @@ jobs:
     steps:
 
     - uses: actions/checkout@v3
+      with:
+        path: master
+
+    # Now checkout the release branch to release folder.
+    - uses: actions/checkout@v3
+      with:
+        ref: release
+        path: release
 
     # Would like a version of manifest.json that is usable from browsers
     # for grist-static. CORS wildcard is not set on releases, but is set
@@ -19,14 +27,15 @@ jobs:
       run: |
           git config user.name "Paul's Grist Bot"
           git config user.email "<paul+bot@getgrist.com>"
-          git archive --format=tar --prefix=stage/ HEAD | tar xf -
-          git stash --include-untracked
-          git checkout release
-          rm -rf stage
-          git stash pop
-          cd stage
-          ./buildtools/publish.js
-          cd ..
+          cd master
+          ./buildtools/publish.js https://gristlabs.github.io/grist-widget/master
+          git add -f manifest.json
+          git commit -m "adding manifest"
+          cd ../release
+          rm -rf master
+          cd ../master
+          git archive --format=tar --prefix=master/ HEAD | (cd ../release && tar xf -)
+          cd ../release
           git add -A
-          git commit -m "add manifest.json" -a
+          git commit -m "master preview"
           git push --set-upstream origin HEAD:release -f
