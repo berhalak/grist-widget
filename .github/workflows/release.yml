@@ -25,13 +25,15 @@ jobs:
     # on github pages. Also jsdelivr can mirror branches, but not releases.
     - name: Make a release branch that includes manifest.json
       run: |
+          cd master
           git config user.name "Paul's Grist Bot"
           git config user.email "<paul+bot@getgrist.com>"
-          cd master
           ./buildtools/publish.js https://gristlabs.github.io/grist-widget/master
           git add -f manifest.json
           git commit -m "adding manifest"
           cd ../release
+          git config user.name "Paul's Grist Bot"
+          git config user.email "<paul+bot@getgrist.com>"
           rm -rf master
           cd ../master
           git archive --format=tar --prefix=master/ HEAD | (cd ../release && tar xf -)
