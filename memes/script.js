@@ -1,5 +1,5 @@
 /**
- * Scale an element to the available space.
+ * Scale an element to the available space.   
  */
 function scaleBasedOnWindow(elm, scale=1, fit=false){
   if (!fit) {
