@@ -1,9 +1,9 @@
-name: Automatic release
+name: Prod release
 on:
-  # Action is triggered on every commit to the master branch.
+  # Action is triggered on every commit to the prod branch.
   push:
     branches:
-    - master
+    - prod
 
 jobs:
   release:
@@ -12,7 +12,7 @@ jobs:
 
     - uses: actions/checkout@v3
       with:
-        path: master
+        path: prod
 
     # Now checkout the release branch to release folder.
     - uses: actions/checkout@v3
@@ -25,19 +25,22 @@ jobs:
     # on github pages. Also jsdelivr can mirror branches, but not releases.
     - name: Make a release branch that includes manifest.json
       run: |
-          cd master
+          cd prod
           git config user.name "Paul's Grist Bot"
           git config user.email "<paul+bot@getgrist.com>"
-          ./buildtools/publish.js https://gristlabs.github.io/grist-widget/master
+          ./buildtools/publish.js
           git add -f manifest.json
           git commit -m "adding manifest"
+          # Now prepare the release branch.
           cd ../release
           git config user.name "Paul's Grist Bot"
           git config user.email "<paul+bot@getgrist.com>"
-          rm -rf master
-          cd ../master
-          git archive --format=tar --prefix=master/ HEAD | (cd ../release && tar xf -)
-          cd ../release
+          # remove everything except .git .gitignore and master
+          find . -maxdepth 1 -mindepth 1 -not -name .git -not -name .gitignore -not -name master -exec rm -rf {} \;
+          # Now copy the material from prod to release
+          cd ../prod
+          git archive --format=tar HEAD | (cd ../release && tar xf -)
           git add -A
-          git commit -m "master preview"
+          git add -f manifest.json
+          git commit -m "prd preview"
           git push --set-upstream origin HEAD:release -f

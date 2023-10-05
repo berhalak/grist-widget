@@ -1,0 +1,42 @@
+name: Stage release
+on:
+  # Action is triggered on every commit to the master branch.
+  push:
+    branches:
+    - master
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+
+    - uses: actions/checkout@v3
+      with:
+        path: master
+
+    # Now checkout the release branch to release folder.
+    - uses: actions/checkout@v3
+      with:
+        ref: release
+        path: release
+
+    # Would like a version of manifest.json that is usable from browsers
+    # for grist-static. CORS wildcard is not set on releases, but is set
+    # on github pages. Also jsdelivr can mirror branches, but not releases.
+    - name: Make a release branch that includes manifest.json
+      run: |
+          cd master
+          git config user.name "Paul's Grist Bot"
+          git config user.email "<paul+bot@getgrist.com>"
+          ./buildtools/publish.js https://gristlabs.github.io/grist-widget/master
+          git add -f manifest.json
+          git commit -m "adding manifest"
+          rm -rf ../release/master
+          git archive --format=tar --prefix=master/ HEAD | (cd ../release && tar xf -)
+          cd ../release
+          git config user.name "Paul's Grist Bot"
+          git config user.email "<paul+bot@getgrist.com>"
+          git add -A
+          git add -f master/manifest.json
+          git commit -m "master preview"
+          git push --set-upstream origin HEAD:release -f
