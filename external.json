@@ -1,0 +1,10 @@
+{
+  "jupyterlite": {},
+  "chart": {},
+  "varamil/simplefilter": {
+    "name": "Simple table filter",
+    "url": "https://gristlabs.github.io/grist-widget/varamil/simplefilter/index.html",
+    "widgetId": "@varamil/widget-simplefilter",
+    "isGristLabsMaintained": false
+  }
+}
